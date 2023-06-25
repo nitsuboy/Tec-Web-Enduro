@@ -17,7 +17,7 @@ function bezier(x1,x2,x3,t) {
     return (((1 - t) * (1 - t))*x1) + (2*t*(1 - t)*x2) + t*t*x3
 }
 
-function Carro(l = 0,i = 290,f = false) {
+function Carro(l = 0,i = 290,f = false,UI) {
 
     let frames = ['/img/car_0.png','/img/car_1.png']
 
@@ -43,14 +43,21 @@ function Carro(l = 0,i = 290,f = false) {
     let per = (this.getY()*-.0023)+1.64
     let s = ((this.getY()*.0023)-.47)
 
-    this.reset = (f = false, i = 285) => {
+    this.fc = (f,c=0) => {
+        this.color = c
+        this.isfake = f
+        this.isfake ? this.elemento.style.opacity = "0" : this.elemento.style.opacity = "1"
+        this.elemento.style.filter = 'hue-rotate('+this.color+'deg)'
+    }
+
+    this.reset = (f = false, i = 285,p = false) => {
         per = 0
         s = 0
         this.elemento.style.transform = "scale("+ s +")"
         this.setY(i)
         this.isfake = f
         this.isfake ? this.elemento.style.opacity = "0" : this.elemento.style.opacity = "1"
-        this.passed = false
+        this.passed = p
         this.color = Math.floor(Math.random()*360)
         this.elemento.style.filter = 'hue-rotate('+this.color+'deg)'
     }
@@ -61,9 +68,13 @@ function Carro(l = 0,i = 290,f = false) {
         this.elemento.style.transform = "scale("+ s +")"
         //this.setY(this.getY() + (v - this.v)*(((s>0 && s<1)?s:1)+.01))
         
-        if(this.getY()>700 && !this.passed){
+        if(this.getY()>635 && !this.passed && !this.isfake){
             this.passed = true
-            p++
+            UI(-1)
+        }
+        if(this.getY()<635 && this.passed && !this.isfake){
+            this.passed = false
+            UI(1)
         }
         this.setX(bezier(lanes[this.lane][0],lanes[this.lane][1],535 + c*.95,per))
         this.elemento.src = frames[count%2]
@@ -91,6 +102,8 @@ function Jogador(largura,altura) {
 
     this.setY(altura - 65)
     this.setX(largura / 2 - 60)
+    let direx = 0
+    let direy = 0
 
     this.animar = () => {
         this.elemento.src = (v < 1 ? frames[0] : frames[Math.floor((count%(2*(5 - v+1))/(1*(5 - v+1))))])
@@ -113,31 +126,44 @@ function Jogador(largura,altura) {
         this.setX((this.getX() > 737 ? 737 : this.getX()))
         this.setX((this.getX() < 337 ? 337 : this.getX()))
 
+        
         let col
         for (let i = 0; i < cars.length; i++) {
             let car = cars[i]
             car.every((c) => {
                 col = c.col()
                 if( col[0] < this.getX() + 120 &&
-                        col[0] + col[2] > this.getX() &&
-                        col[1] < this.getY() + 41 &&
-                        col[3] + col[1] > this.getY()
-                        && !c.isfake)
+                    col[0] + col[2] > this.getX() &&
+                    col[1] < this.getY() + 41 &&
+                    col[3] + col[1] > this.getY() &&
+                    !c.isfake)
                         {
+                            if(this.getX() > col[0]){
+                                direx = .3
+                            }else{
+                                direx = -.3
+                            }
+                            if(this.getY() > col[1]){
+                                direy = .5
+                            }else{
+                                direy = .1
+                            }
                             this.batida = true
-                            console.log(this.batida)
                             return false
                         }
                 else{
-                    return true
+                    return true 
                 }
             })
             if(this.batida) break
         }
 
         if(this.batida){
-            v -= .6
+            v -= direy
+            this.setX(this.getX() + direx)
             setTimeout(() => {
+                direx = 0
+                direy = 0
                 this.batida = false;
               }, 1000);
         }
@@ -229,15 +255,16 @@ function Estrada(largura,altura,curva = 0) {
     }
 }
 
-function Inimigos(largura) {
+function Inimigos(UI) {
     let esp = 120
-    let auy
+    let aux
     let l
     while(cars.length < 8) {
         let l = []
         for (let i = 0; i < 3; i++) {
             l[i] = new Carro(i,290,
-                (Math.random() > .5 ? true : false))
+                            (Math.random() > .5 ? true : false),
+                            UI)
         }
         if(!l[0].isfake && !l[1].isfake  && !l[2].isfake) {l[Math.floor(Math.random()*3)].reset(true,290)}
         cars.push(l)
@@ -248,14 +275,33 @@ function Inimigos(largura) {
             for (let j = 0; j < 3; j++) {
                 cars[i][j].setY(((i - 1) < 0 ? cars[0][0].getY() + (v - cars[i][j].v)*(((cars[i][j].s()>0 && cars[i][j].s()<1)?cars[i][j].s():1)+.01) : cars[i - 1][0].getY() + (esp*cars[i][j].s())))
                 cars[i][j].animar(c)
-                if(cars[i][j].getY() > 690){
-                    auy = jogador.getY()
-                    if(auy > 600){
-
-                    }else if(auy > 400){
-
-                    }else if(auy > 200){
-
+                if(cars[i][j].getY() >= 680 && !cars[i][j].isfake){
+                    aux = jogador.getX()
+                    console.log(aux)
+                    if(aux > 660 && j == 2){
+                        if(cars[i][1].isfake){
+                            cars[i][1].fc(false,cars[i][j].color)
+                            cars[i][j].fc(true)
+                        }else{
+                            cars[i][0].fc(false,cars[i][j].color)
+                            cars[i][j].fc(true)
+                        }
+                    }else if(aux > 470 && aux < 660  && j == 1){
+                        if(cars[i][2].isfake){
+                            cars[i][2].fc(false,cars[i][j].color)
+                            cars[i][j].fc(true)
+                        }else{
+                            cars[i][0].fc(false,cars[i][j].color)
+                            cars[i][j].fc(true)
+                        }
+                    }else if(aux < 490  && j == 0){
+                        if(cars[i][2].isfake){
+                            cars[i][2].fc(false,cars[i][j].color)
+                            cars[i][j].fc(true)
+                        }else{
+                            cars[i][1].fc(false,cars[i][j].color)
+                            cars[i][j].fc(true)
+                        }
                     }
                 }
             }
@@ -273,9 +319,9 @@ function Inimigos(largura) {
         if(cars[0][0].getY() < 240){
             l = cars.shift()
             l.forEach((c) => {
-                c.reset((Math.random() > .5 ? true : false),700)
+                c.reset((Math.random() > .5 ? true : false),700,true)
             })
-            if(!l[0].isfake && !l[1].isfake  && !l[2].isfake) {l[Math.floor(Math.random()*3)].reset(true,700)}
+            if(!l[0].isfake && !l[1].isfake  && !l[2].isfake) {l[Math.floor(Math.random()*3)].reset(true,700,true)}
             cars.push(l)
         }
     }
@@ -312,14 +358,19 @@ function col(corpo) {
 
 function UI() {
 
-    this.elemento = novoElemento('span', 'progresso')
-    this.atualizarPontos = pontos => {
-        this.elemento.innerHTML = pontos
+    this.elemento = novoElemento('div', 'UI')
+    this.progesso = novoElemento('span', 'pos')
+    this.pontos = novoElemento('span', 'points')
+    this.meter = novoElemento('div', 'meters')
+    this.elemento.appendChild(this.progesso)
+    
+    this.attprogresso = (i) => {
+        this.progesso.textContent = p += i
     }
-    this.atualizarPontos(0)
 }
 
 function RacyyCar() {
+    p = 200
     const areaDoJogo = document.querySelector('[wm-flappy]')
     const altura = areaDoJogo.clientHeight
     const largura = areaDoJogo.clientWidth
@@ -327,25 +378,27 @@ function RacyyCar() {
     const ceu = new Efeitos(largura,altura)
     const estrada = new Estrada(largura,altura)
     const jogador = new Jogador(largura,altura)
-    const colj = new col(jogador)
-    const cols = []
+    const ui = new UI()
+    //const colj = new col(jogador)
+    //const cols = []
     
-    const inimigos = new Inimigos(largura)
+    const inimigos = new Inimigos((i) => ui.attprogresso(i))
 
     areaDoJogo.appendChild(jogador.elemento)
     areaDoJogo.appendChild(estrada.elemento)
     areaDoJogo.appendChild(ceu.elemento)
-    areaDoJogo.appendChild(colj.elemento)
+    //areaDoJogo.appendChild(colj.elemento)
+    areaDoJogo.appendChild(ui.elemento)
 
     cars.forEach((l) => {
         l.forEach((c) => {
             estrada.elemento.appendChild(c.elemento)
-            cols.push(new col(c))
+            //cols.push(new col(c))
         })
     })
-    cols.forEach((e) => {
+    /*cols.forEach((e) => {
         areaDoJogo.appendChild(e.elemento)
-    })
+    })*/
 
     console.log(cars)
 
@@ -360,7 +413,7 @@ function RacyyCar() {
             jogador.animar()
             inimigos.animar(jogador) 
             //colj.animar()
-            cols.forEach((e) => {e.animar()})
+            //cols.forEach((e) => {e.animar()})
 
             jogador.setX(jogador.getX() - ((c/200)*(v/5)))
             estrada.setX(160.5 - (jogador.getX()*.3))
