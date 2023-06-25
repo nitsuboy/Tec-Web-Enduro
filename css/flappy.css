@@ -1,8 +1,16 @@
 @font-face {
     font-family: 'Gameplay';
     src: url('/fontes/Gameplay.ttf') format('truetype');
+}
+
+@font-face {
     font-family: 'Pixelitalic';
     src: url('/fontes/PixelDigivolveItalic.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Digital';
+    src: url('/fontes/digital-7.ttf') format('truetype');
 }
 
 * {
@@ -57,7 +65,6 @@ body {
 .col {
     position: absolute;
     border: 2px solid dodgerblue;
-
     z-index: 250;
 }
 
@@ -82,9 +89,9 @@ body {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: #2e2e2e;
-    background-image: repeating-linear-gradient(11deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) 1px, transparent 0px, transparent 4px);
-    background-size: 8px;
+    background-color: #1f1f1f;
+    background-image: repeating-linear-gradient(0deg, rgb(44, 44, 44) 0% 50%, rgba(255,255,255,0) 50% 100%);
+    background-size: 200px 30px;
     filter: saturate(200%);
     transform: matrix3d(1.8,0,0.00,0
                         ,0.00,0.71,0.71,-.007
@@ -97,7 +104,7 @@ body {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: linear-gradient(0deg, rgba(2,0,36,0) 10%, rgb(15, 15, 15) 30%, rgba(0,0,0,1) 100%);
+    background: linear-gradient(0deg, rgba(2,0,36,0) 10%, rgb(15, 15, 15) 40%, rgba(0,0,0,1) 100%);
 }
 
 .estrada {
@@ -150,10 +157,81 @@ body {
     height: 100%;
     z-index: 300;
 }
+.meters {
+    position: absolute;
+    left: 30px;
+    width: 190px;
+    height: 190px;
+    bottom: 30px;
+    background: url('/img/velo.png');
+    background-repeat: no-repeat;
+    background-size: auto;
+    background-size: 190px;
+    image-rendering: pixelated;
+}
+.pointerv {
+    position: inherit;
+    width: 190px;
+    image-rendering: pixelated;
+    transform: rotate(-20deg);
+}
+.pointerg {
+    position: inherit;
+    width: 190px;
+    left: 61px;
+    bottom: -90px;
+    transform: rotate(30deg);
+    image-rendering: pixelated;
+}
+.velo {
+    position: inherit;
+    font-family: 'digital';
+    font-size: 30px;
+    bottom: 25px;
+    right: 74px;
+}
+.odo {
+    position: absolute;
+    background-color: black;
+    width: 300px;
+    height: 100px;
+    right: 10px;
+    bottom: 30px;
+}
+.status {
+    position: absolute;
+}
+.posdiv {
+    position: absolute;
+    background-color: green;
+    width: 215px;
+    height: 100px;
+    left: 0px;
+    transform: scaleX(0);
+    z-index: 1;
+}
+.voltaanim{
+    animation: volta .3s ease-in-out;
+}
+@keyframes volta {
+    0%{transform-origin: bottom left;
+        transform: scaleX(0);}
+    49%{transform-origin: bottom left;}
+    50%{transform: scaleX(1);}
+    51%{transform-origin: bottom right;}
+    100%{transform: scaleX(0);
+        transform-origin: bottom right;}
+}
 
 .pos {
     position: absolute;
     font-family: 'Pixelitalic';
-    right: 20px;
+    right: -200px;
     font-size: 80px;
+}
+.vol {
+    position: absolute;
+    font-family: 'Pixelitalic';
+    font-size: 40px;
+    left: 240px;
 }

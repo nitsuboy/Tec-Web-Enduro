@@ -1,11 +1,13 @@
-var inputs = []
-var cars = []
-var lanes = [[250,417],[535,535],[820,643]]
-var count = 0
-var countv = 0
-var v = 0
-var p = 0
-var estradaoffset
+var inputs = [] // input handler
+var cars = [] // carros, é quem diria
+var lanes = [[250,417],[535,535],[820,643]] // ponto base e medio para o calculo da curva de bezier
+var count = 0   // contador goblal
+var countv = 0  // contador com velocidade
+var v = 0 // velocidade
+var p = 0 // posição
+var g = 0 // gasolina
+var l = 0 // volta
+var estradaoffset // offset da estrada
 
 function novoElemento(tagName, className) {
     const elemento = document.createElement(tagName)
@@ -13,11 +15,21 @@ function novoElemento(tagName, className) {
     return elemento
 }
 
+function play(objeto,anim) {
+    objeto.className = objeto.className.split(" ")[0];
+    console.log()
+    requestAnimationFrame((time) => {
+      requestAnimationFrame((time) => {
+        objeto.className = objeto.className + " " + anim;
+      });
+    });
+}
+
 function bezier(x1,x2,x3,t) {
     return (((1 - t) * (1 - t))*x1) + (2*t*(1 - t)*x2) + t*t*x3
 }
 
-function Carro(l = 0,i = 290,f = false,UI) {
+function Carro(l = 0,i = 290,f = false) {
 
     let frames = ['/img/car_0.png','/img/car_1.png']
 
@@ -70,11 +82,11 @@ function Carro(l = 0,i = 290,f = false,UI) {
         
         if(this.getY()>635 && !this.passed && !this.isfake){
             this.passed = true
-            UI(-1)
+            p--
         }
         if(this.getY()<635 && this.passed && !this.isfake){
             this.passed = false
-            UI(1)
+            p++
         }
         this.setX(bezier(lanes[this.lane][0],lanes[this.lane][1],535 + c*.95,per))
         this.elemento.src = frames[count%2]
@@ -115,14 +127,12 @@ function Jogador(largura,altura) {
             this.setX(this.getX() + v * 1.2)
         }
         if (inputs['s'] == true && !this.batida){
-            v -= 0.2
+            v -= .2
         }
         if (inputs[' '] == true && !this.batida){
-            v += 0.1
+            v += .1
         }
 
-        v = (v > 5 ? 5 : v)
-        v = (v < 1 ? 1 : v)
         this.setX((this.getX() > 737 ? 737 : this.getX()))
         this.setX((this.getX() < 337 ? 337 : this.getX()))
 
@@ -139,9 +149,9 @@ function Jogador(largura,altura) {
                     !c.isfake)
                         {
                             if(this.getX() > col[0]){
-                                direx = .3
+                                direx = .5
                             }else{
-                                direx = -.3
+                                direx = -.5
                             }
                             if(this.getY() > col[1]){
                                 direy = .5
@@ -167,6 +177,9 @@ function Jogador(largura,altura) {
                 this.batida = false;
               }, 1000);
         }
+
+        v = (v > 5 ? 5 : v)
+        v = (v < 0 ? 0 : v)
     }
 }
 
@@ -359,18 +372,42 @@ function col(corpo) {
 function UI() {
 
     this.elemento = novoElemento('div', 'UI')
+
+    this.status = novoElemento('div','status')
     this.progesso = novoElemento('span', 'pos')
-    this.pontos = novoElemento('span', 'points')
-    this.meter = novoElemento('div', 'meters')
-    this.elemento.appendChild(this.progesso)
+    this.pdiv = novoElemento('div', 'posdiv')
+    this.voltas = novoElemento('span', 'vol')
     
-    this.attprogresso = (i) => {
-        this.progesso.textContent = p += i
+    this.status.appendChild(this.pdiv)
+    this.status.appendChild(this.progesso)
+    this.status.appendChild(this.voltas)
+
+    this.meter = novoElemento('div', 'meters')
+    this.pv = novoElemento('img', 'pointerv')
+    this.pg = novoElemento('img', 'pointerg')
+    this.pv.src = '/img/pointer.png'
+    this.pg.src = '/img/pointerp.png'
+    this.velo = novoElemento('span', 'velo')
+
+    this.meter.appendChild(this.pv)
+    this.meter.appendChild(this.pg)
+    this.meter.appendChild(this.velo)
+
+    this.elemento.appendChild(this.meter)
+    this.elemento.appendChild(this.status)
+
+    this.animar = () => {
+        this.pv.style.transform = "rotate("+ (((v*45)-45) + Math.random()*3)+"deg)";
+        this.pg.style.transform = "rotate("+ (((g*.02)+30))+"deg)";
+        this.velo.textContent = Math.floor(v*40)
+        this.progesso.textContent = p + "°"
+        this.voltas.textContent = l
     }
 }
 
 function RacyyCar() {
     p = 200
+    g = 6000
     const areaDoJogo = document.querySelector('[wm-flappy]')
     const altura = areaDoJogo.clientHeight
     const largura = areaDoJogo.clientWidth
@@ -406,14 +443,24 @@ function RacyyCar() {
         const temporizador = setInterval(() => {
             countv += 1 * (v)
             count += 1 
+            g -= 1/2
             c = 0
             //c = Math.sin(countv/1000)*250
+            
             
             estrada.animar(c)
             jogador.animar()
             inimigos.animar(jogador) 
             //colj.animar()
             //cols.forEach((e) => {e.animar()})
+            if(p <=  1) {
+                g = 6000
+                p = 20
+                l++
+                play(ui.pdiv,"voltaanim")
+            }
+
+            ui.animar()
 
             jogador.setX(jogador.getX() - ((c/200)*(v/5)))
             estrada.setX(160.5 - (jogador.getX()*.3))
