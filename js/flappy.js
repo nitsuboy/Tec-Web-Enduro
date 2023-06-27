@@ -5,9 +5,11 @@ var count = 0   // contador goblal
 var countv = 0  // contador com velocidade
 var v = 0 // velocidade
 var p = 0 // posição
+var s = 0 // score
 var g = 0 // gasolina
 var l = 0 // volta
 var estradaoffset // offset da estrada
+var maxspeed = 10
 
 function novoElemento(tagName, className) {
     const elemento = document.createElement(tagName)
@@ -17,7 +19,6 @@ function novoElemento(tagName, className) {
 
 function play(objeto,anim) {
     objeto.className = objeto.className.split(" ")[0];
-    console.log()
     requestAnimationFrame((time) => {
       requestAnimationFrame((time) => {
         objeto.className = objeto.className + " " + anim;
@@ -39,7 +40,7 @@ function Carro(l = 0,i = 290,f = false) {
     this.isfake = f
     this.lane = l
     this.passed = false
-    this.v = 2
+    this.v = 5
     this.isfake ? this.elemento.style.opacity = "0" : this.elemento.style.opacity = "1"
     this.getY = () => parseFloat(this.elemento.style.top.split('px')[0])
     this.setY = y => this.elemento.style.top = y.toFixed(2) + "px"
@@ -55,14 +56,15 @@ function Carro(l = 0,i = 290,f = false) {
     let per = (this.getY()*-.0023)+1.64
     let s = ((this.getY()*.0023)-.47)
 
-    this.fc = (f,c=0) => {
+    this.fc = (f,c = 0,p = true) => {
         this.color = c
         this.isfake = f
+        this.passed = p
         this.isfake ? this.elemento.style.opacity = "0" : this.elemento.style.opacity = "1"
         this.elemento.style.filter = 'hue-rotate('+this.color+'deg)'
     }
 
-    this.reset = (f = false, i = 285,p = false) => {
+    this.reset = (f = false, i = 285,p) => {
         per = 0
         s = 0
         this.elemento.style.transform = "scale("+ s +")"
@@ -115,10 +117,9 @@ function Jogador(largura,altura) {
     this.setY(altura - 65)
     this.setX(largura / 2 - 60)
     let direx = 0
-    let direy = 0
 
     this.animar = () => {
-        this.elemento.src = (v < 1 ? frames[0] : frames[Math.floor((count%(2*(5 - v+1))/(1*(5 - v+1))))])
+        this.elemento.src = (v < 1 ? frames[0] : frames[Math.floor((count%(2*(maxspeed - v+1))/(1*(maxspeed - v+1))))])
         
         if (inputs['a'] == true && !this.batida){
             this.setX(this.getX() - v * 1.2)
@@ -153,11 +154,6 @@ function Jogador(largura,altura) {
                             }else{
                                 direx = -.5
                             }
-                            if(this.getY() > col[1]){
-                                direy = .5
-                            }else{
-                                direy = .1
-                            }
                             this.batida = true
                             return false
                         }
@@ -167,31 +163,32 @@ function Jogador(largura,altura) {
             })
             if(this.batida) break
         }
+        v = (v < 1 ? 1 : v)
 
         if(this.batida){
-            v -= direy
+            v -= 3
             this.setX(this.getX() + direx)
             setTimeout(() => {
                 direx = 0
-                direy = 0
                 this.batida = false;
-              }, 1000);
+              }, 1200);
         }
 
-        v = (v > 5 ? 5 : v)
-        v = (v < 0 ? 0 : v)
+        v = (v > maxspeed ? maxspeed : v)
+        
     }
 }
 
-function criarlinha(x1,y1,x2,y2,id) {
+function criarlinha(x1,y1,x2,y2,bw) {
 
     let d = Math.sqrt(((x1 - x2)*(x1 - x2)) + ((y1 - y2) *(y1 - y2)))
-    this.elemento = novoElemento('div',id)
+    this.elemento = novoElemento('div','linha')
     this.elemento.style.width = d + "px"
     this.elemento.style.top = (y1+y2)/2 + "px"
     this.elemento.style.left = ((x1+x2)/2 - d/2) + "px"
     this.elemento.style.transform = "rotate("+((Math.atan2(y1-y2,x1-x2)*180)/Math.PI)+"deg)"
     this.points = [x1,y1,x2,y2]
+    this.elemento.style.borderWidth = bw;
     this.animar = (x1,y1,x2,y2) => {
         d = Math.sqrt(((x1 - x2)*(x1 - x2)) + ((y1 - y2) *(y1 - y2)))
         this.elemento.style.width = d + "px"
@@ -217,21 +214,26 @@ function Estrada(largura,altura,curva = 0) {
     this.setY(0)
     this.setX(0)
 
+
     //asfalto
     let af = new novoElemento('div','asfalto')
     let pix = new novoElemento('div','p')
+    let grama = new novoElemento('div','g')
     af.appendChild(pix)
     pix.appendChild(new novoElemento('div','ps'))
+    grama.appendChild(new novoElemento('div','pg'))
+
+    this.elemento.appendChild(af)
+    this.elemento.appendChild(grama)
     let mask = ""
 
-    criarlinha(250,690,(largura/2),290,"linha")
 
     // laterais
-    let le = [new criarlinha(this.xe(310)+curva,310,(largura/2) + curva,290,"linha")]
-    let ld = [new criarlinha(this.xd(310)+curva,310,(largura/2) + curva,290,"linha")]
+    let le = [new criarlinha(this.xe(310)+curva,310,(largura/2) + curva,290,"1px")]
+    let ld = [new criarlinha(this.xd(310)+curva,310,(largura/2) + curva,290,"1px")]
     alt.forEach((e) => {
-        le.push(new criarlinha(this.xe(e),e,le[aux].points[0],le[aux].points[1],"linha"))
-        ld.push(new criarlinha(this.xd(e),e,ld[aux].points[0],ld[aux].points[1],"linha"))
+        le.push(new criarlinha(this.xe(e),e,le[aux].points[0],le[aux].points[1],((e*.022)-5.6)+"px"))
+        ld.push(new criarlinha(this.xd(e),e,ld[aux].points[0],ld[aux].points[1],((e*.022)-5.6)+"px"))
         aux+=1
     })
 
@@ -240,15 +242,17 @@ function Estrada(largura,altura,curva = 0) {
         this.elemento.appendChild(e.elemento)
         mask += ((e.points[0]/1190)*100).toFixed(2) + "% "+((e.points[1]/690)*100).toFixed(2) + "% ,"
     })
-    le.reverse().forEach((e) => {
+    le.forEach((e) => {
         this.elemento.appendChild(e.elemento)
         mask += ((e.points[0]/1190)*100).toFixed(2) + "% "+((e.points[1]/690)*100).toFixed(2) + "% ,"
     })
-    af.style.clipPath = "polygon("+mask.slice(0, -1)+")" 
-    this.elemento.appendChild(af)
+    af.style.clipPath = "polygon("+mask.slice(0, -1)+")"
+
+    
 
     this.animar = (c) => {
         pix.style.backgroundPosition = "0px "+ countv + "px"
+        grama.style.backgroundPosition = "0px "+ countv + "px"
         mask = ""
         ld[0].animar(this.xd(310,c),310,(largura/2) + c,290)
         le[0].animar(this.xe(310,c),310,(largura/2) + c,290)
@@ -261,7 +265,7 @@ function Estrada(largura,altura,curva = 0) {
             aux +=1
         }))
         mask += ((ld[aux-1].points[0]/1190)*100).toFixed(2) + "% "+((ld[aux-1].points[1]/690)*100).toFixed(2) + "% ,"
-        le.reverse().forEach((e) => {
+        le.slice().reverse().forEach((e) => {
             mask += ((e.points[0]/1190)*100).toFixed(2) + "% "+((e.points[1]/690)*100).toFixed(2) + "% ,"
         })
         af.style.clipPath = "polygon("+mask.slice(0, -1)+")" 
@@ -269,10 +273,9 @@ function Estrada(largura,altura,curva = 0) {
 }
 
 function Inimigos(UI) {
-    let esp = 120
-    let aux
+    let esp = 180
     let l
-    while(cars.length < 8) {
+    while(cars.length < 5) {
         let l = []
         for (let i = 0; i < 3; i++) {
             l[i] = new Carro(i,290,
@@ -283,15 +286,14 @@ function Inimigos(UI) {
         cars.push(l)
     }
 
-    this.animar = (jogador) => {
+    this.animar = (aux) => {
         for (let i = 0; i < cars.length; i++) {
             for (let j = 0; j < 3; j++) {
                 cars[i][j].setY(((i - 1) < 0 ? cars[0][0].getY() + (v - cars[i][j].v)*(((cars[i][j].s()>0 && cars[i][j].s()<1)?cars[i][j].s():1)+.01) : cars[i - 1][0].getY() + (esp*cars[i][j].s())))
                 cars[i][j].animar(c)
                 if(cars[i][j].getY() >= 680 && !cars[i][j].isfake){
-                    aux = jogador.getX()
-                    console.log(aux)
                     if(aux > 660 && j == 2){
+                        console.log("lane 3 " + aux)
                         if(cars[i][1].isfake){
                             cars[i][1].fc(false,cars[i][j].color)
                             cars[i][j].fc(true)
@@ -300,6 +302,7 @@ function Inimigos(UI) {
                             cars[i][j].fc(true)
                         }
                     }else if(aux > 470 && aux < 660  && j == 1){
+                        console.log("lane 2 " + aux)
                         if(cars[i][2].isfake){
                             cars[i][2].fc(false,cars[i][j].color)
                             cars[i][j].fc(true)
@@ -307,7 +310,8 @@ function Inimigos(UI) {
                             cars[i][0].fc(false,cars[i][j].color)
                             cars[i][j].fc(true)
                         }
-                    }else if(aux < 490  && j == 0){
+                    }else if(aux < 470  && j == 0){
+                        console.log("lane 1 " + aux)
                         if(cars[i][2].isfake){
                             cars[i][2].fc(false,cars[i][j].color)
                             cars[i][j].fc(true)
@@ -341,13 +345,21 @@ function Inimigos(UI) {
 }
 
 function Efeitos(largura,altura) {
+    let backgrounds = ['/img/back_1.png','/img/back_2.png','/img/back_3.png','/img/back_4.png','/img/back_5.png','/img/back_6.png']
+    let backpos = 0
+    let aux = false
+    
     this.elemento = new novoElemento('div','efeitos')
-    this.elemento.appendChild(new novoElemento('div','ceu'))
-    this.elemento.appendChild(new novoElemento('div','sobre'))
+    this.ceu = new novoElemento('div','ceu')
+    this.cycle = new novoElemento('div','sobre')
+    this.elemento.appendChild(this.ceu)
+    this.elemento.appendChild(this.cycle)
 
-
-    this.animar = (c,count) => {
-        
+    this.animar = (c) => {
+        backpos += (v*c*.001)
+        this.ceu.style.backgroundPosition = backpos + "px 0px"
+        this.cycle.style.opacity = (count > 1200 ? (((count*count)/-480)+(count*12.5)-12000)/10000 : 0)
+        if(count > 4800) count = 0
     }
 }
 
@@ -377,10 +389,12 @@ function UI() {
     this.progesso = novoElemento('span', 'pos')
     this.pdiv = novoElemento('div', 'posdiv')
     this.voltas = novoElemento('span', 'vol')
+    this.pontos = novoElemento('span', 'points')
     
     this.status.appendChild(this.pdiv)
     this.status.appendChild(this.progesso)
     this.status.appendChild(this.voltas)
+    this.status.appendChild(this.pontos)
 
     this.meter = novoElemento('div', 'meters')
     this.pv = novoElemento('img', 'pointerv')
@@ -397,72 +411,73 @@ function UI() {
     this.elemento.appendChild(this.status)
 
     this.animar = () => {
-        this.pv.style.transform = "rotate("+ (((v*45)-45) + Math.random()*3)+"deg)";
+        let vdeg = (((v*22.5)-45) + Math.random()*3)
+        this.pv.style.transform = "rotate("+ (vdeg < -45 ? -45 : vdeg )+"deg)";
         this.pg.style.transform = "rotate("+ (((g*.02)+30))+"deg)";
-        this.velo.textContent = Math.floor(v*40)
+        this.velo.textContent = (v < 0 ? 0 : Math.floor(v*20))
         this.progesso.textContent = p + "°"
         this.voltas.textContent = l
+        this.pontos.textContent = ('000000'+Math.floor(s)).slice(-6);
     }
 }
 
 function RacyyCar() {
-    p = 200
+    p = 5
     g = 6000
     const areaDoJogo = document.querySelector('[wm-flappy]')
     const altura = areaDoJogo.clientHeight
     const largura = areaDoJogo.clientWidth
 
-    const ceu = new Efeitos(largura,altura)
+    const efeitos = new Efeitos(largura,altura)
     const estrada = new Estrada(largura,altura)
     const jogador = new Jogador(largura,altura)
     const ui = new UI()
-    //const colj = new col(jogador)
-    //const cols = []
+    const colj = new col(jogador)
+    const cols = []
     
     const inimigos = new Inimigos((i) => ui.attprogresso(i))
 
     areaDoJogo.appendChild(jogador.elemento)
     areaDoJogo.appendChild(estrada.elemento)
-    areaDoJogo.appendChild(ceu.elemento)
-    //areaDoJogo.appendChild(colj.elemento)
+    areaDoJogo.appendChild(efeitos.elemento)
+    areaDoJogo.appendChild(colj.elemento)
     areaDoJogo.appendChild(ui.elemento)
 
     cars.forEach((l) => {
         l.forEach((c) => {
             estrada.elemento.appendChild(c.elemento)
-            //cols.push(new col(c))
+            cols.push(new col(c))
         })
     })
-    /*cols.forEach((e) => {
+    cols.forEach((e) => {
         areaDoJogo.appendChild(e.elemento)
-    })*/
-
-    console.log(cars)
+    })
 
     this.start = () => {
         const temporizador = setInterval(() => {
-            countv += 1 * (v)
-            count += 1 
+            countv += (v)
+            count++
             g -= 1/2
-            c = 0
-            //c = Math.sin(countv/1000)*250
-            
+            c = Math.sin(countv/1000)*500
+            s += (v < 0 ? 0 : v)*.01
             
             estrada.animar(c)
             jogador.animar()
-            inimigos.animar(jogador) 
-            //colj.animar()
-            //cols.forEach((e) => {e.animar()})
-            if(p <=  1) {
-                g = 6000
-                p = 20
-                l++
+            inimigos.animar(jogador.getX())
+            efeitos.animar(c)
+            colj.animar()
+            cols.forEach((e) => {e.animar()})
+
+            if(p <  1) {
                 play(ui.pdiv,"voltaanim")
+                g = 6000
+                p = 5
+                l++
             }
 
             ui.animar()
 
-            jogador.setX(jogador.getX() - ((c/200)*(v/5)))
+            jogador.setX(jogador.getX() - ((c/200)*(v/maxspeed)))
             estrada.setX(160.5 - (jogador.getX()*.3))
             estradaoffset = estrada.getX()
         }, 20)
