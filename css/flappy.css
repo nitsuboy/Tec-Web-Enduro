@@ -5,7 +5,7 @@
 
 @font-face {
     font-family: 'Pixelitalic';
-    src: url('/fontes/PixelDigivolve-Italictes.ttf') format('truetype');
+    src: url('/fontes/Pixelnum-italic.ttf') format('truetype');
 }
 
 @font-face {
@@ -38,10 +38,11 @@ body {
 
 
 [wm-flappy] {
-    position: relative;
+    position: absolute;
     border: 5px solid dodgerblue;
     height: 700px;
     width: 1200px;
+    top: 90px;
     margin: 15px;
     overflow: hidden;
 }
@@ -49,16 +50,41 @@ body {
 .carro {
     position: absolute;
     width: 120px;
-    z-index: 99;
+    height: 41px;
+    z-index: 1;
+}
+
+.chassi {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: white; 
+    background-image: url('/img/chassi.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    -webkit-mask-image: url('/img/invchassimask.png');
+    mask-image: url('/img/invchassimask.png');
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size:cover;
+    mask-size:cover;
+    background-blend-mode: multiply;
     image-rendering: pixelated;
 }
 
-.jogador {
+.pneu {
     position: absolute;
-    width: 120px;
-    left: calc(50% - 100px);
+    width: 100%;
     image-rendering: pixelated;
-    z-index: 100;
+}
+
+.luzes {
+    position: absolute;
+    width: 100%;
+    opacity: 0;
+    z-index: 10;
+    transform: translateZ(10px);
+    image-rendering: pixelated;
 }
 
 .col {
@@ -96,6 +122,7 @@ body {
                         ,0,0,0,2.3);
     transform-style: preserve-3d;    
 }
+
 .g {
     position: absolute;
     width: 100%;
@@ -116,6 +143,7 @@ body {
     height: 100%;
     background: linear-gradient(0deg, rgba(2,0,36,0) 10%, rgb(15, 15, 15) 40%, rgba(0,0,0,1) 100%);
 }
+
 .pg {
     position: absolute;
     width: 100%;
@@ -140,8 +168,8 @@ body {
     width: 100%;
     height: 100%;
     background-color: black;
-    opacity: .0;
-    z-index: 200;
+    opacity: 0;
+    z-index: 2;
 }
 
 .ceu {
@@ -150,7 +178,6 @@ body {
     height: 42.5%;
     background-size: cover;
     background-image: url(/img/back_2.png);
-    z-index: 200;
     image-rendering: pixelated;
 }
 

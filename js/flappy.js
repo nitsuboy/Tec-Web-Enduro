@@ -1,8 +1,10 @@
 var inputs = [] // input handler
 var cars = [] // carros, é quem diria
+var colors = ['#a2a22a','#6e9c42','#a28638','#429e82','#48a048','#4288b0','#b846a2','#c66c3a','#4272c2','#6848c6'];
 var lanes = [[250,417],[535,535],[820,643]] // ponto base e medio para o calculo da curva de bezier
-var count = 0   // contador goblal
+var count = 1800   // contador goblal
 var countv = 0  // contador com velocidade
+var countp = 0 // contador pausa
 var v = 0 // velocidade
 var p = 0 // posição
 var s = 0 // score
@@ -10,6 +12,7 @@ var g = 0 // gasolina
 var l = 0 // volta
 var estradaoffset // offset da estrada
 var maxspeed = 10
+var pause = false
 
 function novoElemento(tagName, className) {
     const elemento = document.createElement(tagName)
@@ -30,13 +33,29 @@ function bezier(x1,x2,x3,t) {
     return (((1 - t) * (1 - t))*x1) + (2*t*(1 - t)*x2) + t*t*x3
 }
 
+function RandomRgb() {
+    let r = Math.floor(Math.random()*(256));
+    let g = Math.floor(Math.random()*(256));
+    let b = Math.floor(Math.random()*(256));
+    return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+  }
+
 function Carro(l = 0,i = 290,f = false) {
 
-    let frames = ['/img/car_0.png','/img/car_1.png']
+    let frames = ['/img/pneu_0.png','/img/pneu_1.png']
 
-    this.elemento = novoElemento('img', 'carro')
-    this.elemento.src = frames[0]
-    this.color = Math.floor(Math.random()*360)
+    this.elemento = novoElemento('div', 'carro')
+
+    this.chassi = novoElemento('div', 'chassi')
+    this.pneu = novoElemento('img','pneu')
+    this.pneu.src = frames[0]
+    this.luzes = novoElemento('img','luzes')
+    this.luzes.src = '/img/luz.png'
+    this.elemento.appendChild(this.luzes)
+    this.elemento.appendChild(this.chassi)
+    this.elemento.appendChild(this.pneu)
+
+    this.color = colors[Math.floor(Math.random() * colors.length)]
     this.isfake = f
     this.lane = l
     this.passed = false
@@ -46,41 +65,40 @@ function Carro(l = 0,i = 290,f = false) {
     this.setY = y => this.elemento.style.top = y.toFixed(2) + "px"
     this.getX = () => parseFloat(this.elemento.style.left.split('px')[0])
     this.setX = x => this.elemento.style.left = x.toFixed(2) + "px"
-    this.col = () => [this.getX() + estradaoffset + (60 - ((120*s)/2)),this.getY() + (20 - ((40*s)/2)),120*s,41*s]
     this.s = () => ((this.getY()*.0023)-.47)
+    this.col = (s = this.s()) => [this.getX() + estradaoffset + (60 - ((120*s)/2)),this.getY() + (20 - ((40*s)/2)),120*s,41*s]
+    
     
     this.setX(535)
     this.setY(i)
-    this.elemento.style.filter = "hue-rotate("+this.color+"deg)"
+    this.elemento.style.transform = "scale("+ this.s() +")"
+    this.chassi.style.backgroundColor = this.color;
 
-    let per = (this.getY()*-.0023)+1.64
-    let s = ((this.getY()*.0023)-.47)
+    let per 
+    let s
 
     this.fc = (f,c = 0,p = true) => {
         this.color = c
         this.isfake = f
         this.passed = p
         this.isfake ? this.elemento.style.opacity = "0" : this.elemento.style.opacity = "1"
-        this.elemento.style.filter = 'hue-rotate('+this.color+'deg)'
+        this.chassi.style.backgroundColor = this.color;
     }
 
     this.reset = (f = false, i = 285,p) => {
-        per = 0
-        s = 0
-        this.elemento.style.transform = "scale("+ s +")"
+        this.elemento.style.transform = "scale("+ 0 +")"
         this.setY(i)
         this.isfake = f
         this.isfake ? this.elemento.style.opacity = "0" : this.elemento.style.opacity = "1"
         this.passed = p
-        this.color = Math.floor(Math.random()*360)
-        this.elemento.style.filter = 'hue-rotate('+this.color+'deg)'
+        this.color = colors[Math.floor(Math.random() * colors.length)]
+        this.chassi.style.backgroundColor = this.color;
     }
 
     this.animar = (c) => {
         per = (this.getY()*-.0024)+1.68
         s = ((this.getY()*.0028)-.76)
         this.elemento.style.transform = "scale("+ s +")"
-        //this.setY(this.getY() + (v - this.v)*(((s>0 && s<1)?s:1)+.01))
         
         if(this.getY()>635 && !this.passed && !this.isfake){
             this.passed = true
@@ -91,24 +109,31 @@ function Carro(l = 0,i = 290,f = false) {
             p++
         }
         this.setX(bezier(lanes[this.lane][0],lanes[this.lane][1],535 + c*.95,per))
-        this.elemento.src = frames[count%2]
-        
+        this.pneu.src = frames[count%2]
+        count < 1400 ? this.luzes.style.opacity = "0" : this.luzes.style.opacity = "1"
     }
 }
 
 function Jogador(largura,altura) {
 
-    let frames = ['/img/car_0.png','/img/car_1.png']
+    let frames = ['/img/pneu_0.png','/img/pneu_1.png']
 
-    this.elemento = novoElemento('img', 'jogador')
-    this.elemento.src = frames[0] 
+    this.elemento = novoElemento('div', 'carro')
+
+    this.chassi = novoElemento('div', 'chassi')
+    this.pneu = novoElemento('img','pneu')
+    this.pneu.src = frames[0]
+    this.luzes = novoElemento('img','luzes')
+    this.luzes.src = '/img/luz.png'
+    this.chassi.appendChild(this.luzes)
+    this.elemento.appendChild(this.chassi)
+    this.elemento.appendChild(this.pneu)
 
     this.getY = () => parseFloat(this.elemento.style.top.split('px')[0])
     this.setY = y => this.elemento.style.top = y.toFixed(2) + "px"
     this.getX = () => parseFloat(this.elemento.style.left.split('px')[0])
     this.setX = x => this.elemento.style.left = x.toFixed(2) + "px"
     this.batida = false
-    this.count = 0
     this.col = () => [this.getX(),this.getY(),120,41]
 
     window.onkeydown = e => inputs[e.key] = true;
@@ -119,7 +144,7 @@ function Jogador(largura,altura) {
     let direx = 0
 
     this.animar = () => {
-        this.elemento.src = (v < 1 ? frames[0] : frames[Math.floor((count%(2*(maxspeed - v+1))/(1*(maxspeed - v+1))))])
+        this.pneu.src = (v < 1 ? frames[0] : frames[Math.floor((count%(2*(maxspeed - v+1))/(1*(maxspeed - v+1))))])
         
         if (inputs['a'] == true && !this.batida){
             this.setX(this.getX() - v * 1.2)
@@ -244,11 +269,11 @@ function Estrada(largura,altura,curva = 0) {
     })
     le.forEach((e) => {
         this.elemento.appendChild(e.elemento)
+    })
+    le.slice().reverse().forEach((e) => {
         mask += ((e.points[0]/1190)*100).toFixed(2) + "% "+((e.points[1]/690)*100).toFixed(2) + "% ,"
     })
     af.style.clipPath = "polygon("+mask.slice(0, -1)+")"
-
-    
 
     this.animar = (c) => {
         pix.style.backgroundPosition = "0px "+ countv + "px"
@@ -347,7 +372,6 @@ function Inimigos(UI) {
 function Efeitos(largura,altura) {
     let backgrounds = ['/img/back_1.png','/img/back_2.png','/img/back_3.png','/img/back_4.png','/img/back_5.png','/img/back_6.png']
     let backpos = 0
-    let aux = false
     
     this.elemento = new novoElemento('div','efeitos')
     this.ceu = new novoElemento('div','ceu')
@@ -361,6 +385,7 @@ function Efeitos(largura,altura) {
         this.cycle.style.opacity = (count > 1200 ? (((count*count)/-480)+(count*12.5)-12000)/10000 : 0)
         if(count > 4800) count = 0
     }
+
 }
 
 function col(corpo) {
@@ -382,9 +407,9 @@ function col(corpo) {
 }
 
 function UI() {
-
+     //Wrapper
     this.elemento = novoElemento('div', 'UI')
-
+    // Parte superior
     this.status = novoElemento('div','status')
     this.progesso = novoElemento('span', 'pos')
     this.pdiv = novoElemento('div', 'posdiv')
@@ -395,7 +420,7 @@ function UI() {
     this.status.appendChild(this.progesso)
     this.status.appendChild(this.voltas)
     this.status.appendChild(this.pontos)
-
+    // Parte inferior
     this.meter = novoElemento('div', 'meters')
     this.pv = novoElemento('img', 'pointerv')
     this.pg = novoElemento('img', 'pointerg')
@@ -406,9 +431,13 @@ function UI() {
     this.meter.appendChild(this.pv)
     this.meter.appendChild(this.pg)
     this.meter.appendChild(this.velo)
+    // Menu de pausa
+    this.menu = novoElemento('div','menu')
+
 
     this.elemento.appendChild(this.meter)
     this.elemento.appendChild(this.status)
+    this.elemento.appendChild(this.menu)
 
     this.animar = () => {
         let vdeg = (((v*22.5)-45) + Math.random()*3)
@@ -418,6 +447,10 @@ function UI() {
         this.progesso.textContent = p + "°"
         this.voltas.textContent = l
         this.pontos.textContent = ('000000'+Math.floor(s)).slice(-6);
+    }
+
+    this.pause = () => {
+
     }
 }
 
@@ -455,31 +488,43 @@ function RacyyCar() {
 
     this.start = () => {
         const temporizador = setInterval(() => {
-            countv += (v)
-            count++
-            g -= 1/2
-            c = Math.sin(countv/1000)*500
-            s += (v < 0 ? 0 : v)*.01
-            
-            estrada.animar(c)
-            jogador.animar()
-            inimigos.animar(jogador.getX())
-            efeitos.animar(c)
-            colj.animar()
-            cols.forEach((e) => {e.animar()})
+            if(!pause){
+                countv += (v)
+                count++
+                g -= 1/2
+                c = Math.sin(countv/1000)*500
+                s += (v < 0 ? 0 : v)*.01
+                
+                estrada.animar(c)
+                jogador.animar()
+                inimigos.animar(jogador.getX())
+                efeitos.animar(c)
+                //colj.animar()
+                cols.forEach((e) => {e.animar()})
 
-            if(p <  1) {
-                play(ui.pdiv,"voltaanim")
-                g = 6000
-                p = 5
-                l++
+                if(p <  1) {
+                    play(ui.pdiv,"voltaanim")
+                    g = 6000
+                    p = 5
+                    l++
+                }
+
+                ui.animar()
+
+                jogador.setX(jogador.getX() - ((c/200)*(v/maxspeed)))
+                estrada.setX(160.5 - (jogador.getX()*.3))
+                estradaoffset = estrada.getX()
+            }else{
+                ui.pause()
+            }
+            if(countp > 0){
+                countp--
+            }
+            if (inputs['Escape'] == true && countp == 0){
+                pause = !pause
+                countp = 10
             }
 
-            ui.animar()
-
-            jogador.setX(jogador.getX() - ((c/200)*(v/maxspeed)))
-            estrada.setX(160.5 - (jogador.getX()*.3))
-            estradaoffset = estrada.getX()
         }, 20)
     }
 }
