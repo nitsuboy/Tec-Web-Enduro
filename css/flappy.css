@@ -25,6 +25,10 @@ html {
 body {
     margin: 0;
     background-color: #0D262D;
+    background-image: url('/img/fundo.png');
+    background-position: center -149px;
+    background-repeat: repeat-x;
+    background-size: 3150px;
     color: #fff;
     height: 100%;
 }
@@ -36,10 +40,14 @@ body {
     min-height: 100%;
 }
 
+.titulo {
+    position: absolute;
+    top: 10px;
+}
 
 [wm-flappy] {
     position: absolute;
-    border: 5px solid dodgerblue;
+    border: 5px solid #0A0A0A;
     height: 700px;
     width: 1200px;
     top: 90px;
@@ -82,7 +90,7 @@ body {
     position: absolute;
     width: 100%;
     opacity: 0;
-    z-index: 10;
+    z-index: 1;
     transform: translateZ(10px);
     image-rendering: pixelated;
 }
@@ -148,7 +156,7 @@ body {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: linear-gradient(0deg, rgba(2,0,36,0) 10%, #6b947b 60%, #4f6d5a 100%);
+    background: linear-gradient(0deg, rgba(0,0,0,0) 10%, #6b947b 60%, #466150 100%);
 }
 
 .estrada {
@@ -163,13 +171,13 @@ body {
     height: 100%;
 }
 
-.sobre {
+.ciclo {
     position: absolute;
     width: 100%;
     height: 100%;
     background-color: black;
     opacity: 0;
-    z-index: 2;
+    z-index: 3;
 }
 
 .ceu {
@@ -179,6 +187,7 @@ body {
     background-size: cover;
     background-image: url(/img/back_2.png);
     image-rendering: pixelated;
+    z-index: 2;
 }
 
 .UI {
