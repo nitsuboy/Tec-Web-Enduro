@@ -2,23 +2,28 @@ var inputs = [] // input handler
 var cars = [] // carros, é quem diria
 var count = 0   // contador goblal
 var countv = 0  // contador com velocidade
-var countp = 0 // contador pausa
 var v = 0 // velocidade
-var p = 0 // posição
+var p = 200 // posição
 var s = 0 // score
 var g = 6000 // gasolina
 var l = 0 // volta
+var d = 0 // dificuldade
 var estradaoffset // offset da estrada
+var nevoado = false
 var pause = false
+var pausec = false // contador pausa
 const colors = ['#a2a22a','#6e9c42','#a28638','#429e82','#48a048','#4288b0','#b846a2','#c66c3a','#4272c2','#6848c6'];
 const lanes = [[250,417],[535,535],[820,643]] // ponto base e medio para o calculo da curva de bezier
-const backgrounds = [{'img' : '/img/back_1','shade_1' : '','shade_2' : ''},
-                     {'img' : '/img/back_2','shade_1' : '#6b947b','shade_2' : '#466150'},
-                     {'img' : '/img/back_3','shade_1' : '','shade_2' : ''},
-                     {'img' : '/img/back_4','shade_1' : '','shade_2' : ''}]
+const backgrounds = [{'img' : '/img/backgrounds/back_1.png','shade_1' : '#c3cbf1','shade_2' : '#5f77d7'},
+                     {'img' : '/img/backgrounds/back_2.png','shade_1' : '#6b947b','shade_2' : '#466150'},
+                     {'img' : '/img/backgrounds/back_3.png','shade_1' : '#9c8473','shade_2' : '#846b5a'},
+                     {'img' : '/img/backgrounds/back_4.png','shade_1' : '#4a637b','shade_2' : '#294a5a'}]
                      //repeating-linear-gradient(0deg, shade_1 0% 50%, shade_2 50% 100%);
                      //linear-gradient(0deg, rgba(0,0,0,0) 10%, shade_1 60%, shade_2 100%);
+const frames = ['/img/car/pneu_0.png','/img/car/pneu_1.png']
 const maxspeed = 10
+const colorp = document.getElementById('colorpick');
+const backp = document.getElementById('backpick');
 
 // ~~ = math.trunc 
 
@@ -43,15 +48,13 @@ function bezier(x1,x2,x3,t) {
 
 function Carro(l = 0,i = 290,f = false) {
 
-    const frames = ['/img/pneu_0.png','/img/pneu_1.png']
-
     this.elemento = novoElemento('div', 'carro')
 
     this.chassi = novoElemento('div', 'chassi')
     this.pneu = novoElemento('img','pneu')
     this.pneu.src = frames[0]
     this.luzes = novoElemento('img','luzes')
-    this.luzes.src = '/img/luz.png'
+    this.luzes.src = '/img/car/luz.png'
     this.elemento.appendChild(this.luzes)
     this.elemento.appendChild(this.chassi)
     this.elemento.appendChild(this.pneu)
@@ -116,18 +119,21 @@ function Carro(l = 0,i = 290,f = false) {
 
 function Jogador(largura,altura) {
 
-    const frames = ['/img/pneu_0.png','/img/pneu_1.png']
-
     this.elemento = new novoElemento('div', 'carro')
 
     this.chassi = new novoElemento('div', 'chassi')
     this.pneu = new novoElemento('img','pneu')
     this.pneu.src = frames[0]
     this.luzes = new novoElemento('img','luzes')
-    this.luzes.src = '/img/luz.png'
+    this.luzes.src = '/img/car/luz.png'
+    const si = new novoElemento('img','go')
+    si.src = '/img/car/go.png'
+    si.style.opacity = 0
+
     this.chassi.appendChild(this.luzes)
     this.elemento.appendChild(this.chassi)
     this.elemento.appendChild(this.pneu)
+    this.elemento.appendChild(si)
 
     this.getY = () => parseFloat(this.elemento.style.top.split('px')[0])
     this.setY = y => this.elemento.style.top = y.toFixed(2) + "px"
@@ -159,8 +165,6 @@ function Jogador(largura,altura) {
         this.setX((this.getX() > 737 ? 737 : this.getX()))
         this.setX((this.getX() < 337 ? 337 : this.getX()))
 
-        
-        let col
         for (let i = 0; i < cars.length; i++) {
             let car = cars[i]
             car.every((c) => {
@@ -197,7 +201,13 @@ function Jogador(largura,altura) {
         }
 
         v = (v > maxspeed ? maxspeed : v)
-        
+
+        if(g <  0) {
+            g = 0
+            v = 0
+            si.style.opacity = 1
+        }
+
     }
 }
 
@@ -240,13 +250,14 @@ function Estrada(largura,curva = 0) {
     //asfalto
     const af = new novoElemento('div','asfalto')
     const pix = new novoElemento('div','p')
-    const grama = new novoElemento('div','g')
+    this.grama = new novoElemento('div','g')
     af.appendChild(pix)
     pix.appendChild(new novoElemento('div','ps'))
-    grama.appendChild(new novoElemento('div','pg'))
+    this.fog = new novoElemento('div','pg')
+    this.grama.appendChild(this.fog)
 
     this.elemento.appendChild(af)
-    this.elemento.appendChild(grama)
+    this.elemento.appendChild(this.grama)
     let mask = ""
 
     // laterais
@@ -274,7 +285,7 @@ function Estrada(largura,curva = 0) {
 
     this.animar = (c) => {
         pix.style.backgroundPosition = "0px "+ countv + "px"
-        grama.style.backgroundPosition = "0px "+ countv + "px"
+        this.grama.style.backgroundPosition = "0px "+ countv + "px"
         mask = ""
         ld[0].animar(this.xd(310,c),310,(largura/2) + c,290)
         le[0].animar(this.xe(310,c),310,(largura/2) + c,290)
@@ -300,7 +311,7 @@ function Inimigos() {
     while(cars.length < 5) {
         l = []
         while(l.length < 3){
-            l.push(new Carro(l.length,290,(Math.random() > .5 ? true : false)))
+            l.push(new Carro(l.length,290,(Math.random() > .5 - d ? true : false)))
         }
         if(!l[0].isfake && !l[1].isfake  && !l[2].isfake) {l[~~(Math.random()*3)].reset(true,290)}
         cars.push(l)
@@ -337,21 +348,50 @@ function Inimigos() {
     }
 }
 
-function Efeitos() {
+function Efeitos(estrada) {
     let backpos = 0
     
     this.elemento = new novoElemento('div','efeitos')
+
     this.ceu = new novoElemento('div','ceu')
+
+    this.ceu.style.backgroundImage = "url("+backgrounds[1].img+")"
+    estrada.grama.style.backgroundImage = "repeating-linear-gradient(0deg," + backgrounds[1].shade_1 + " 0% 50%, " + backgrounds[1].shade_2 + " 50% 100%)"
+    estrada.fog.style.backgroundImage = "linear-gradient(0deg, rgba(0,0,0,0) 10%, " + backgrounds[1].shade_1 + " 60%, " + backgrounds[1].shade_2 + " 100%)"
+
     this.ciclo = new novoElemento('div','ciclo')
-    this.nevoa = new novoElemento('img','nevoa')
+    this.nevoa = new novoElemento('div','nevoa')
     this.elemento.appendChild(this.ceu)
     this.elemento.appendChild(this.ciclo)
+    this.elemento.appendChild(this.nevoa)
+
+    this.change = (id) => {
+        this.ceu.style.backgroundImage = "url("+backgrounds[id].img+")"
+        estrada.grama.style.backgroundImage = "repeating-linear-gradient(0deg," + backgrounds[id].shade_1 + " 0% 50%, " + backgrounds[id].shade_2 + " 50% 100%)"
+        estrada.fog.style.backgroundImage = "linear-gradient(0deg, rgba(0,0,0,0) 10%, " + backgrounds[id].shade_1 + " 60%, " + backgrounds[id].shade_2 + " 100%)"
+    }
 
     this.animar = (c) => {
         backpos += (v*c*.001)
         this.ceu.style.backgroundPosition = backpos + "px 0px"
         this.ciclo.style.opacity = (count > 1200 ? (((count*count)/-480)+(count*12.5)-12000)/10000 : 0)
-        if(count > 4800) count = 0
+        if(count > 4800) {
+            count = 0
+            if(nevoado){
+                play(this.nevoa,'nevoaanim-out')
+                setTimeout(()=>{
+                    this.nevoa.style.opacity = 0
+                    nevoado = false
+                }, 1000)
+            }
+            if(Math.random() > .8 - d && !nevoado){
+                play(this.nevoa,'nevoaanim-in')
+                setTimeout(()=>{
+                    this.nevoa.style.opacity = 1
+                    nevoado = true
+                }, 1000)
+            }
+        }
     }
 
 }
@@ -394,8 +434,8 @@ function UI() {
     this.meter = novoElemento('div', 'meters')
     this.pv = novoElemento('img', 'pointerv')
     this.pg = novoElemento('img', 'pointerg')
-    this.pv.src = '/img/pointer.png'
-    this.pg.src = '/img/pointerp.png'
+    this.pv.src = '/img/UI/pointer.png'
+    this.pg.src = '/img/UI/pointerp.png'
     this.velo = novoElemento('span', 'velo')
 
     this.meter.appendChild(this.pv)
@@ -404,7 +444,13 @@ function UI() {
     let vdeg
 
     // Menu de pausa
-    this.menu = novoElemento('div','menu')
+    this.menu = document.querySelector('[menu]')
+
+    if(pause){
+        this.menu.style.display = "flex"
+    }else{
+        this.menu.style.display = "none"
+    }
 
     this.elemento.appendChild(this.meter)
     this.elemento.appendChild(this.status)
@@ -421,6 +467,11 @@ function UI() {
     }
 
     this.pause = () => {
+        if(pause){
+            this.menu.style.display = "flex"
+        }else{
+            this.menu.style.display = "none"
+        }
     }
 }
 
@@ -430,9 +481,9 @@ function RacyyCar() {
     const altura = areaDoJogo.clientHeight
     const largura = areaDoJogo.clientWidth
 
-    const efeitos = new Efeitos(largura,altura)
-    const estrada = new Estrada(largura,altura)
+    const estrada = new Estrada(largura)
     const jogador = new Jogador(largura,altura)
+    const efeitos = new Efeitos(estrada)
     const inimigos = new Inimigos()
     const ui = new UI()
     //const colj = new col(jogador)
@@ -460,10 +511,18 @@ function RacyyCar() {
         areaDoJogo.appendChild(e.elemento)
     })*/
 
+    this.changecolor = (color) => {
+        jogador.chassi.style.backgroundColor = color
+    }
+
+    this.changeback = (id) => {
+        efeitos.change(id)
+    }
+
     this.loop = () => {
         const temporizador = setInterval(() => {
             if(!pause){
-                countv += (v)
+                countv += v
                 count++
                 g -= 1/2
                 c = Math.sin(countv/1000)*500
@@ -480,11 +539,8 @@ function RacyyCar() {
                     play(ui.pdiv,"voltaanim")
                     g = 6000
                     p = 200
+                    d += .01
                     l++
-                }
-
-                if(g <  0) {
-                    g = 0
                 }
 
                 ui.animar()
@@ -492,21 +548,27 @@ function RacyyCar() {
                 jogador.setX(jogador.getX() - ((c/200)*(v/maxspeed)))
                 estrada.setX(160.5 - (jogador.getX()*.3))
                 estradaoffset = estrada.getX()
-            }else{
-                ui.pause()
             }
 
-            if(countp > 0){
-                countp--
-            }
-
-            if (inputs['Escape'] == true && countp == 0){
+            if (inputs['Escape'] == true && !pausec){
                 pause = !pause
-                countp = 10
+                pausec = true
+                ui.pause()
+                setTimeout(()=>{
+                    pausec = false
+                }, 200)
             }
-
         }, 20)
     }
 }
 
-new RacyyCar().loop() 
+const game = new RacyyCar()
+
+game.loop()
+
+colorp.addEventListener('input', () => {
+    game.changecolor(colorp.value)
+});
+backp.addEventListener('change', () => {
+    game.changeback(backp.value)
+});

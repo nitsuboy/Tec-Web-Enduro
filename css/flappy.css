@@ -1,9 +1,4 @@
 @font-face {
-    font-family: 'Gameplay';
-    src: url('/fontes/Gameplay.ttf') format('truetype');
-}
-
-@font-face {
     font-family: 'Pixelitalic';
     src: url('/fontes/Pixelnum-italic.ttf') format('truetype');
 }
@@ -14,7 +9,7 @@
 }
 
 * {
-    font-family: 'Gameplay', sans-serif;
+    font-family: 'Pixelitalic', sans-serif;
     box-sizing: border-box;
 }
 
@@ -25,7 +20,7 @@ html {
 body {
     margin: 0;
     background-color: #0D262D;
-    background-image: url('/img/fundo.png');
+    background-image: url(/img/UI/fundo.png);
     background-position: center -149px;
     background-repeat: repeat-x;
     background-size: 3150px;
@@ -67,11 +62,11 @@ body {
     width: 100%;
     height: 100%;
     background-color: white; 
-    background-image: url('/img/chassi.png');
+    background-image: url(/img/car/chassi.png);
     background-repeat: no-repeat;
     background-size: cover;
-    -webkit-mask-image: url('/img/invchassimask.png');
-    mask-image: url('/img/invchassimask.png');
+    -webkit-mask-image: url(/img/car/invchassimask.png);
+    mask-image: url(/img/car/invchassimask.png);
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     -webkit-mask-size:cover;
@@ -104,9 +99,8 @@ body {
 .linha{
     position: absolute;
     border-style: solid;
-    
     background-color: #fff;
-    border-color: white;
+    border-color: #fff;
     border-radius: 70px;
     border-bottom: 100px;
 }
@@ -185,9 +179,37 @@ body {
     width: 100%;
     height: 42.5%;
     background-size: cover;
-    background-image: url(/img/back_2.png);
     image-rendering: pixelated;
     z-index: 2;
+}
+
+.nevoa {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-image: url(/img/efeitos/nevoa.png);
+    image-rendering: pixelated;
+    z-index: 2;
+    opacity: 0;
+}
+
+.nevoaanim-in{
+    animation: nevoa-in 5s ease-in-out;
+}
+
+@keyframes nevoa-in {
+    0%{opacity: 0;}
+    100%{opacity: 1;}
+}
+
+.nevoaanim-out{
+    animation: nevoa-out 5s ease-in-out;
+}
+
+@keyframes nevoa-out {
+    0%{opacity: 1;}
+    100%{opacity: 0;}
 }
 
 .UI {
@@ -203,7 +225,7 @@ body {
     width: 190px;
     height: 190px;
     bottom: 30px;
-    background: url('/img/velo.png');
+    background: url(/img/UI/velo.png);
     background-repeat: no-repeat;
     background-size: auto;
     background-size: 190px;
@@ -284,4 +306,28 @@ body {
     font-size: 40px;
     left: 240px;
     text-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+}
+
+.menu {
+    position: absolute;
+    background-image: url(/img/UI/pause.png);
+    background-size: cover;
+    background-repeat: no-repeat;
+    width: 400px;
+    height: 424px;
+    top: 145px;
+    left: 384px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+}
+
+.go {
+    position: relative;
+    width: 70px;
+    left: -55px;
+    top: -45px;
+    image-rendering: pixelated;
+    z-index: 50;
 }
