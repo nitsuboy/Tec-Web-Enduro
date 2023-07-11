@@ -1,27 +1,28 @@
-var inputs = [] // input handler
-var cars = [] // carros, é quem diria
+var inputs = []    // input handler
+var cars = []     // carros, é quem diria
+var items = []   // adivinhe
 var count = 0   // contador goblal
-var countv = 0  // contador com velocidade
-var v = 0 // velocidade
-var p = 200 // posição
-var s = 0 // score
+var countv = 0 // contador com velocidade
+var v = 0       // velocidade
+var p = 200    // posição
+var s = 0     // score
 var g = 6000 // gasolina
-var l = 0 // volta
-var d = 0 // dificuldade
+var l = 0       // volta
+var d = 0      // dificuldade
 var estradaoffset // offset da estrada
 var nevoado = false
 var pause = false
 var pausec = false // contador pausa
 const colors = ['#a2a22a','#6e9c42','#a28638','#429e82','#48a048','#4288b0','#b846a2','#c66c3a','#4272c2','#6848c6'];
-const lanes = [[250,417],[535,535],[820,643]] // ponto base e medio para o calculo da curva de bezier
-const backgrounds = [{'img' : '/img/backgrounds/back_1.png','shade_1' : '#c3cbf1','shade_2' : '#5f77d7'},
-                     {'img' : '/img/backgrounds/back_2.png','shade_1' : '#6b947b','shade_2' : '#466150'},
+const lanes = [[250,420],[535,535],[820,640]] // ponto base e medio para o calculo da curva de bezier
+const backgrounds = [{'img' : '/img/backgrounds/back_2.png','shade_1' : '#6b947b','shade_2' : '#466150'},
+                     {'img' : '/img/backgrounds/back_1.png','shade_1' : '#c3cbf1','shade_2' : '#5f77d7'},
                      {'img' : '/img/backgrounds/back_3.png','shade_1' : '#9c8473','shade_2' : '#846b5a'},
                      {'img' : '/img/backgrounds/back_4.png','shade_1' : '#4a637b','shade_2' : '#294a5a'}]
                      //repeating-linear-gradient(0deg, shade_1 0% 50%, shade_2 50% 100%);
                      //linear-gradient(0deg, rgba(0,0,0,0) 10%, shade_1 60%, shade_2 100%);
 const frames = ['/img/car/pneu_0.png','/img/car/pneu_1.png']
-const maxspeed = 10
+var maxspeed = 10
 const colorp = document.getElementById('colorpick');
 const backp = document.getElementById('backpick');
 
@@ -41,12 +42,16 @@ function play(objeto,anim) {
       });
     });
 }
-
+// Bezier quadratica para a curva
 function bezier(x1,x2,x3,t) {
     return (((1 - t) * (1 - t))*x1) + (2*t*(1 - t)*x2) + t*t*x3
 }
+// interpolação linear para aceleção fica mais macia
+function lerp (start, end, amt){
+    return (1-amt)*start+amt*end
+}
 
-function Carro(l = 0,i = 290,f = false) {
+function Carro(l = 0,i = 290,f = 0) {
 
     this.elemento = novoElemento('div', 'carro')
 
@@ -61,7 +66,7 @@ function Carro(l = 0,i = 290,f = false) {
 
     this.color = colors[~~(Math.random() * colors.length)]
     this.isfake = f
-    this.isfake ? this.elemento.style.opacity = "0" : this.elemento.style.opacity = "1"
+    this.elemento.style.opacity = +!f 
     this.lane = l
     this.passed = false
     this.v = 5
@@ -77,37 +82,40 @@ function Carro(l = 0,i = 290,f = false) {
     this.elemento.style.transform = "scale("+ this.s() +")"
     this.chassi.style.backgroundColor = this.color;
 
-    let per 
+    let per
     let s
+    let auy
 
     this.fc = (f,c = 0,p = true) => {
         this.color = c
         this.isfake = f
         this.passed = p
-        this.isfake ? this.elemento.style.opacity = "0" : this.elemento.style.opacity = "1"
+        this.elemento.style.opacity = +!f
         this.chassi.style.backgroundColor = this.color;
     }
 
-    this.reset = (f = false, i = 285,p) => {
+    this.reset = (f = 0, i = 285,p) => {
         this.elemento.style.transform = "scale("+ 0 +")"
         this.setY(i)
         this.isfake = f
-        this.isfake ? this.elemento.style.opacity = "0" : this.elemento.style.opacity = "1"
+        this.elemento.style.opacity = +!f
         this.passed = p
         this.color = colors[~~(Math.random() * colors.length)]
         this.chassi.style.backgroundColor = this.color;
     }
 
     this.animar = (c) => {
-        per = (this.getY()*-.0024)+1.68
-        s = ((this.getY()*.0028)-.76)
+        auy = this.getY()
+        per = (auy*-.0024)+1.68
+        s = ((auy*.0028)-.76)
+
         this.elemento.style.transform = "scale("+ s +")"
         
-        if(this.getY()>635 && !this.passed && !this.isfake){
+        if(auy>635 && !this.passed && !this.isfake){
             this.passed = true
             p--
         }
-        if(this.getY()<635 && this.passed && !this.isfake){
+        if(auy<635 && this.passed && !this.isfake){
             this.passed = false
             p++
         }
@@ -117,9 +125,65 @@ function Carro(l = 0,i = 290,f = false) {
     }
 }
 
+function Item(i = 260) {
+
+    this.elemento = novoElemento('img', 'item')
+    this.elemento.src = "/img/boostpack.png"
+
+    this.lane = ~~(Math.random()*3)
+    this.used = false
+    this.counter = 0
+    this.flip = () => this.used = !this.used
+    this.getY = () => +(this.elemento.style.top.split('px')[0])
+    this.setY = y => this.elemento.style.top = y.toFixed(2) + "px"
+    this.getX = () => +(this.elemento.style.left.split('px')[0])
+    this.setX = x => this.elemento.style.left = x.toFixed(2) + "px"
+    this.s = () => ((this.getY()*.0023)-.47)
+    this.col = (s = this.s()) => [this.getX() + (50 - ((100*s)/2)),this.getY() + (50 - ((100*s)/2)),100*s,100*s]
+
+    this.setX(535)
+    this.setY(i)
+    this.elemento.style.scale =  this.s()
+
+    let per 
+    let s
+    let auy
+    let pa = 0
+
+    this.animar = (c) => {
+        auy = this.getY()
+        per = (auy*-.0027)+1.68
+        s = ((auy*.0025)-.64)
+        this.counter++
+        this.elemento.style.scale =  s
+
+        this.counter>5e2&&(Math.random()<.5-d&&(pa=1),this.counter=0);
+
+        if(this.getY()>750){
+            if(pa == 1){
+                auy = 260
+                this.elemento.style.scale = 0
+                this.setY(auy)
+                pa = 0
+                this.used = false
+                this.elemento.style.opacity = 1
+                this.lane = ~~(Math.random()*3)
+            }
+        }else{
+            this.setY(auy + (v*s))
+            this.setX(bezier(lanes[this.lane][0],lanes[this.lane][1],535 + c*.95,per) + estradaoffset)
+        }
+    }
+
+    this.efeito = () => {
+        maxspeed += 4
+        this.elemento.style.opacity = 0
+    }
+}
+
 function Jogador(largura,altura) {
 
-    this.elemento = new novoElemento('div', 'carro')
+    this.elemento = new novoElemento('div', 'carro jogador')
 
     this.chassi = new novoElemento('div', 'chassi')
     this.pneu = new novoElemento('img','pneu')
@@ -145,37 +209,42 @@ function Jogador(largura,altura) {
     this.setY(altura - 65)
     this.setX(largura / 2 - 60)
     let direx = 0
+    let aux
 
     this.animar = () => {
         this.pneu.src = (v < 1 ? frames[0] : frames[~~((count%(2*(maxspeed - v+1))/(1*(maxspeed - v+1))))])
         
+        aux = this.getX()
+        aux>1080?aux=1080:aux<0?aux=0:aux
+        this.setX(aux)
+
         if (inputs['a'] == true && !this.batida){
-            this.setX(this.getX() - v * 1.2)
+            this.setX(aux - v * 1.2)
         }
         if (inputs['d'] == true && !this.batida){
-            this.setX(this.getX() + v * 1.2)
+            this.setX(aux + v * 1.2)
         }
         if (inputs['s'] == true && !this.batida){
             v -= .2
         }
         if (inputs[' '] == true && !this.batida){
-            v += .1
+            v = lerp(v,maxspeed,.02)
         }
 
-        this.setX((this.getX() > 737 ? 737 : this.getX()))
-        this.setX((this.getX() < 337 ? 337 : this.getX()))
-
+        let car
+        let col
         for (let i = 0; i < cars.length; i++) {
-            let car = cars[i]
+            car = cars[i]
             car.every((c) => {
                 col = c.col()
-                if( col[0] < this.getX() + 120 &&
-                    col[0] + col[2] > this.getX() &&
+                if( col[0] < aux + 120 &&
+                    col[0] + col[2] > aux &&
                     col[1] < this.getY() + 41 &&
                     col[3] + col[1] > this.getY() &&
                     !c.isfake)
                         {
-                            if(this.getX() > col[0]){
+                            maxspeed = 10
+                            if(aux > col[0]){
                                 direx = .5
                             }else{
                                 direx = -.5
@@ -189,18 +258,38 @@ function Jogador(largura,altura) {
             })
             if(this.batida) break
         }
+
+        items.every((i)=>{
+            col = i.col()
+                if( col[0] < aux + 120 &&
+                    col[0] + col[2] > aux &&
+                    col[1] < this.getY() + 41 &&
+                    col[3] + col[1] > this.getY() &&
+                    !i.used)
+                        {
+                            i.used = true
+                            i.efeito()
+                            return false
+                        }
+                else{
+                    return true 
+                }
+        })
+
+        if (aux > 737 || aux < 337) {
+            v -= .15
+        }
+
         v = (v < 1 ? 1 : v)
 
         if(this.batida){
             v -= 3
-            this.setX(this.getX() + direx)
+            this.setX(aux + direx)
             setTimeout(() => {
                 direx = 0
                 this.batida = false;
               }, 1200);
         }
-
-        v = (v > maxspeed ? maxspeed : v)
 
         if(g <  0) {
             g = 0
@@ -311,11 +400,12 @@ function Inimigos() {
     while(cars.length < 5) {
         l = []
         while(l.length < 3){
-            l.push(new Carro(l.length,290,(Math.random() > .5 - d ? true : false)))
+            l.push(new Carro(l.length,290,(Math.random() > .5 - d ? 1 : 0)))
         }
-        if(!l[0].isfake && !l[1].isfake  && !l[2].isfake) {l[~~(Math.random()*3)].reset(true,290)}
+        l[0].isfake||l[1].isfake||l[2].isfake||l[~~(3*Math.random())].reset(1,290);
         cars.push(l)
     }
+    items.push(new Item())
 
     this.animar = (aux) => {
         for (let i = 0, len = cars.length; i < len; i++) {
@@ -330,21 +420,27 @@ function Inimigos() {
         if(cars.at(-1)[0].getY() > 790){
             l = cars.pop()
             l.forEach((c) => {
-                c.reset((Math.random() > .5 ? true : false),(cars[0][0].getY() - (esp*cars[0][0].s())))
+                c.reset((Math.random() > .5 ? 1 : 0),(cars[0][0].getY() - (esp*cars[0][0].s())))
                 //(cars[0][0].getY() - (esp*cars[0][0].s()))
             })
-            if(!l[0].isfake && !l[1].isfake  && !l[2].isfake) {l[~~(Math.random()*3)].reset(true,(cars[0][0].getY() - (esp*cars[0][0].s())))}
+            l[0].isfake||l[1].isfake||l[2].isfake||l[~~(3*Math.random())].reset(1,cars[0][0].getY()-esp*cars[0][0].s());
             cars.unshift(l)
         }
 
         if(cars[0][0].getY() < 240){
             l = cars.shift()
             l.forEach((c) => {
-                c.reset((Math.random() > .5 ? true : false),700,true)
+                c.reset((Math.random() > .5 ? 1 : 0),700,1)
             })
-            if(!l[0].isfake && !l[1].isfake  && !l[2].isfake) {l[~~(Math.random()*3)].reset(true,700,true)}
+            l[0].isfake||l[1].isfake||l[2].isfake||l[~~(3*Math.random())].reset(1,700,1);
             cars.push(l)
         }
+    }
+
+    this.animaritem = (aux) => {
+        items.forEach((i) => {
+            i.animar(c)
+        })
     }
 }
 
@@ -355,9 +451,9 @@ function Efeitos(estrada) {
 
     this.ceu = new novoElemento('div','ceu')
 
-    this.ceu.style.backgroundImage = "url("+backgrounds[1].img+")"
-    estrada.grama.style.backgroundImage = "repeating-linear-gradient(0deg," + backgrounds[1].shade_1 + " 0% 50%, " + backgrounds[1].shade_2 + " 50% 100%)"
-    estrada.fog.style.backgroundImage = "linear-gradient(0deg, rgba(0,0,0,0) 10%, " + backgrounds[1].shade_1 + " 60%, " + backgrounds[1].shade_2 + " 100%)"
+    this.ceu.style.backgroundImage = "url("+backgrounds[0].img+")"
+    estrada.grama.style.backgroundImage = "repeating-linear-gradient(0deg," + backgrounds[0].shade_1 + " 0% 50%, " + backgrounds[0].shade_2 + " 50% 100%)"
+    estrada.fog.style.backgroundImage = "linear-gradient(0deg, rgba(0,0,0,0) 10%, " + backgrounds[0].shade_1 + " 60%, " + backgrounds[0].shade_2 + " 100%)"
 
     this.ciclo = new novoElemento('div','ciclo')
     this.nevoa = new novoElemento('div','nevoa')
@@ -446,11 +542,7 @@ function UI() {
     // Menu de pausa
     this.menu = document.querySelector('[menu]')
 
-    if(pause){
-        this.menu.style.display = "flex"
-    }else{
-        this.menu.style.display = "none"
-    }
+    pause?this.menu.style.display="flex":this.menu.style.display="none";
 
     this.elemento.appendChild(this.meter)
     this.elemento.appendChild(this.status)
@@ -460,18 +552,14 @@ function UI() {
         vdeg = (((v*22.5)-45) + Math.random()*3)
         this.pv.style.transform = "rotate("+ (vdeg < -45 ? -45 : vdeg )+"deg)";
         this.pg.style.transform = "rotate("+ (((g*.02)+30))+"deg)";
-        this.velo.textContent = (v < 0 ? 0 : ~~v*20)
+        this.velo.textContent = (v < 0 ? 0 : ~~(v*20))
         this.progesso.textContent = p + "°"
         this.voltas.textContent = l
         this.pontos.textContent = ('000000'+ ~~s).slice(-6);
     }
 
     this.pause = () => {
-        if(pause){
-            this.menu.style.display = "flex"
-        }else{
-            this.menu.style.display = "none"
-        }
+        pause?this.menu.style.display="flex":this.menu.style.display="none";
     }
 }
 
@@ -502,14 +590,19 @@ function RacyyCar() {
         })
     })
 
+    items.forEach((i) => {
+        areaDoJogo.appendChild(i.elemento)
+        //cols.push(new col(i))
+    })
+
     // input handler
     window.onkeydown = e => inputs[e.key] = true;
     window.onkeyup = e => delete inputs[e.key];
 
-    /*
-    cols.forEach((e) => {
-        areaDoJogo.appendChild(e.elemento)
-    })*/
+    
+    //cols.forEach((e) => {
+    //    areaDoJogo.appendChild(e.elemento)
+    //})
 
     this.changecolor = (color) => {
         jogador.chassi.style.backgroundColor = color
@@ -531,6 +624,7 @@ function RacyyCar() {
                 estrada.animar(c)
                 jogador.animar()
                 inimigos.animar(jogador.getX())
+                inimigos.animaritem() 
                 efeitos.animar(c)
                 //colj.animar()
                 //cols.forEach((e) => {e.animar()})
@@ -541,6 +635,10 @@ function RacyyCar() {
                     p = 200
                     d += .01
                     l++
+                }
+
+                if (maxspeed > 10) {
+                    maxspeed = lerp(maxspeed, 10, .01)
                 }
 
                 ui.animar()

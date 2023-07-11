@@ -57,6 +57,10 @@ body {
     z-index: 1;
 }
 
+.jogador {
+    z-index: 2;
+}
+
 .chassi {
     position: absolute;
     width: 100%;
@@ -90,6 +94,23 @@ body {
     image-rendering: pixelated;
 }
 
+.item {
+    position: absolute;
+    height: 100px;
+    z-index: 1;
+    image-rendering: pixelated;
+    animation: itemmove 1s infinite;
+}
+
+@keyframes itemmove { 
+    0%, 100% {
+      transform: translateY(-10px);
+    }
+    50% {
+      transform: translateY(-30px);
+    }
+  }
+
 .col {
     position: absolute;
     border: 2px solid dodgerblue;
@@ -118,7 +139,7 @@ body {
     height: 100%;
     background-image: repeating-linear-gradient(0deg, rgb(44, 44, 44) 0% 50%, #1f1f1f 50% 100%);
     background-size: 200px 30px;
-    transform: matrix3d(5,0,0.00,0
+    transform: matrix3d(5.5,0,0.00,0
                         ,0.00,0.71,0.71,-.007
                         ,0,-0.71,0.71,0
                         ,0,0,0,2.3);
@@ -131,7 +152,7 @@ body {
     height: 100%;
     background-image: repeating-linear-gradient(0deg, #6b947b 0% 50%, #466150 50% 100%);
     background-size: 200px 30px;
-    transform: matrix3d(5,0,0,0
+    transform: matrix3d(5.5,0,0,0
                         ,0,0.71,0.71,-.007
                         ,0,-0.71,0.71,0
                         ,0,0,0,2.3);
