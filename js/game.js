@@ -128,7 +128,7 @@ function Carro(l = 0,i = 290,f = 0) {
 function Item(i = 260) {
 
     this.elemento = novoElemento('img', 'item')
-    this.elemento.src = "/img/boostpack.png"
+    this.elemento.src = "/img/items/boostpack.png"
 
     this.lane = ~~(Math.random()*3)
     this.used = false
@@ -648,7 +648,7 @@ function RacyyCar() {
                 estradaoffset = estrada.getX()
             }
 
-            if (inputs['Escape'] == true && !pausec){
+            if (inputs['Enter'] == true && !pausec){
                 pause = !pause
                 pausec = true
                 ui.pause()
