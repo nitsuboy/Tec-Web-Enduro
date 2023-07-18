@@ -13,4 +13,4 @@ controls
 
 <img src="img/controls.png" alt="Game Over" style="width:40vw;"/>
 
-live demo [Here](https://nitsuboy.github.io/pages/enduro.html) (outdated).
+live demo [Here](https://nitsuboy.github.io/pages/enduro.html)
