@@ -1,11 +1,11 @@
 @font-face {
     font-family: 'Pixelitalic';
-    src: url('/fontes/Pixelnum-italic.ttf') format('truetype');
+    src: url('../fontes/Pixelnum-italic.ttf') format('truetype');
 }
 
 @font-face {
     font-family: 'Digital';
-    src: url('/fontes/digital-7.ttf') format('truetype');
+    src: url('../fontes/digital-7.ttf') format('truetype');
 }
 
 * {
@@ -20,7 +20,7 @@ html {
 body {
     margin: 0;
     background-color: #0D262D;
-    background-image: url(/img/UI/fundo.png);
+    background-image: url(../img/UI/fundo.png);
     background-position: center -149px;
     background-repeat: repeat-x;
     background-size: 3150px;
@@ -66,11 +66,11 @@ body {
     width: 100%;
     height: 100%;
     background-color: white; 
-    background-image: url(/img/car/chassi.png);
+    background-image: url(../img/car/chassi.png);
     background-repeat: no-repeat;
     background-size: cover;
-    -webkit-mask-image: url(/img/car/invchassimask.png);
-    mask-image: url(/img/car/invchassimask.png);
+    -webkit-mask-image: url(../img/car/invchassimask.png);
+    mask-image: url(../img/car/invchassimask.png);
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     -webkit-mask-size:cover;
@@ -209,7 +209,7 @@ body {
     width: 100%;
     height: 100%;
     background-size: cover;
-    background-image: url(/img/efeitos/nevoa.png);
+    background-image: url(../img/efeitos/nevoa.png);
     image-rendering: pixelated;
     z-index: 2;
     opacity: 0;
@@ -246,7 +246,7 @@ body {
     width: 190px;
     height: 190px;
     bottom: 30px;
-    background: url(/img/UI/velo.png);
+    background: url(../img/UI/velo.png);
     background-repeat: no-repeat;
     background-size: auto;
     background-size: 190px;
@@ -331,7 +331,7 @@ body {
 
 .menu {
     position: absolute;
-    background-image: url(/img/UI/pause.png);
+    background-image: url(../img/UI/pause.png);
     background-size: cover;
     background-repeat: no-repeat;
     width: 400px;

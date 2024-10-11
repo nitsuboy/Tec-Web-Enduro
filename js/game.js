@@ -15,13 +15,13 @@ var pause = false
 var pausec = false // contador pausa
 const colors = ['#a2a22a','#6e9c42','#a28638','#429e82','#48a048','#4288b0','#b846a2','#c66c3a','#4272c2','#6848c6'];
 const lanes = [[250,420],[535,535],[820,640]] // ponto base e medio para o calculo da curva de bezier
-const backgrounds = [{'img' : '/img/backgrounds/back_2.png','shade_1' : '#6b947b','shade_2' : '#466150'},
-                     {'img' : '/img/backgrounds/back_1.png','shade_1' : '#c3cbf1','shade_2' : '#5f77d7'},
-                     {'img' : '/img/backgrounds/back_3.png','shade_1' : '#9c8473','shade_2' : '#846b5a'},
-                     {'img' : '/img/backgrounds/back_4.png','shade_1' : '#4a637b','shade_2' : '#294a5a'}]
+const backgrounds = [{'img' : '../img/backgrounds/back_2.png','shade_1' : '#6b947b','shade_2' : '#466150'},
+                     {'img' : '../img/backgrounds/back_1.png','shade_1' : '#c3cbf1','shade_2' : '#5f77d7'},
+                     {'img' : '../img/backgrounds/back_3.png','shade_1' : '#9c8473','shade_2' : '#846b5a'},
+                     {'img' : '../img/backgrounds/back_4.png','shade_1' : '#4a637b','shade_2' : '#294a5a'}]
                      //repeating-linear-gradient(0deg, shade_1 0% 50%, shade_2 50% 100%);
                      //linear-gradient(0deg, rgba(0,0,0,0) 10%, shade_1 60%, shade_2 100%);
-const frames = ['/img/car/pneu_0.png','/img/car/pneu_1.png']
+const frames = ['../img/car/pneu_0.png','../img/car/pneu_1.png']
 var maxspeed = 10
 const colorp = document.getElementById('colorpick');
 const backp = document.getElementById('backpick');
@@ -59,7 +59,7 @@ function Carro(l = 0,i = 290,f = 0) {
     this.pneu = novoElemento('img','pneu')
     this.pneu.src = frames[0]
     this.luzes = novoElemento('img','luzes')
-    this.luzes.src = '/img/car/luz.png'
+    this.luzes.src = '../img/car/luz.png'
     this.elemento.appendChild(this.luzes)
     this.elemento.appendChild(this.chassi)
     this.elemento.appendChild(this.pneu)
@@ -128,7 +128,7 @@ function Carro(l = 0,i = 290,f = 0) {
 function Item(i = 260) {
 
     this.elemento = novoElemento('img', 'item')
-    this.elemento.src = "/img/items/boostpack.png"
+    this.elemento.src = "../img/items/boostpack.png"
 
     this.lane = ~~(Math.random()*3)
     this.used = false
@@ -189,9 +189,9 @@ function Jogador(largura,altura) {
     this.pneu = new novoElemento('img','pneu')
     this.pneu.src = frames[0]
     this.luzes = new novoElemento('img','luzes')
-    this.luzes.src = '/img/car/luz.png'
+    this.luzes.src = '../img/car/luz.png'
     const si = new novoElemento('img','go')
-    si.src = '/img/car/go.png'
+    si.src = '../img/car/go.png'
     si.style.opacity = 0
 
     this.chassi.appendChild(this.luzes)
@@ -530,8 +530,8 @@ function UI() {
     this.meter = novoElemento('div', 'meters')
     this.pv = novoElemento('img', 'pointerv')
     this.pg = novoElemento('img', 'pointerg')
-    this.pv.src = '/img/UI/pointer.png'
-    this.pg.src = '/img/UI/pointerp.png'
+    this.pv.src = '../img/UI/pointer.png'
+    this.pg.src = '../img/UI/pointerp.png'
     this.velo = novoElemento('span', 'velo')
 
     this.meter.appendChild(this.pv)
