@@ -12,5 +12,3 @@ remake of the og enduro from atari made by activision using javascript css html 
 controls
 
 <img src="img/controls.png" alt="Game Over" style="width:40vw;"/>
-
-live demo [Here](https://nitsuboy.github.io/pages/enduro.html)
